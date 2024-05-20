@@ -13,5 +13,6 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project_management_app.settings')
 
-app = get_wsgi_application()
+application = get_wsgi_application()
 WSGI_APPLICATION = 'project_management_app.wsgi.app'
+app=application
