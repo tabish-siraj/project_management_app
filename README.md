@@ -1,106 +1,44 @@
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fpython%2Fdjango&demo-title=Django%20%2B%20Vercel&demo-description=Use%20Django%204%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.&demo-url=https%3A%2F%2Fdjango-template.vercel.app%2F&demo-image=https://assets.vercel.com/image/upload/v1669994241/random/django.png)
+# Project Management API
 
-# Django + Vercel
+This Django project provides a RESTful API for managing projects, tasks, and users.
 
-This example shows how to use Django 4 on Vercel with Serverless Functions using the [Python Runtime](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python).
+## Features
 
-## Demo
+1. **User Authentication**: Utilizes JWT (JSON Web Token) authentication for user authentication and authorization.
+2. **Project Management**: Users can create projects and add multiple users to their projects. Each project has a unique name and description.
+3. **Task Management**: Within each project, users can perform CRUD (Create, Read, Update, Delete) operations on tasks. Each task has a title, description, status, and due date.
+4. **Soft Delete**: Implements soft delete functionality for both projects and tasks. Soft delete means marking records as deleted instead of physically removing them from the database.
 
-https://django-template.vercel.app/
+## API Endpoints
 
-## How it Works
+### Authentication
 
-Our Django application, `example` is configured as an installed application in `api/settings.py`:
+- `/api/token/`: POST request to obtain JWT token for authentication.
+- `/api/refresh/token`: POST request to refresh expired JWT token for authentication.
 
-```python
-# api/settings.py
-INSTALLED_APPS = [
-    # ...
-    'example',
-]
-```
+### Users
 
-We allow "\*.vercel.app" subdomains in `ALLOWED_HOSTS`, in addition to 127.0.0.1:
+- `/api/register/`: POST request to register a new user.
 
-```python
-# api/settings.py
-ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app']
-```
+### Projects
 
-The `wsgi` module must use a public variable named `app` to expose the WSGI application:
+- `/api/projects/`: GET request to retrieve all projects. POST request to create a new project.
+- `/api/projects/<project_id>/`: GET, PUT, DELETE requests to retrieve, update, or delete a specific project.
+- `/api/projects/<project_id>/add_member/`: POST request to add a member to a project.
 
-```python
-# api/wsgi.py
-app = get_wsgi_application()
-```
+### Tasks
 
-The corresponding `WSGI_APPLICATION` setting is configured to use the `app` variable from the `api.wsgi` module:
+- `/api/projects/<project_id>/tasks/`: GET request to retrieve all tasks within a project. POST request to create a new task within a project.
+- `/api/projects/<project_id>/tasks/<task_id>/`: GET, PUT, DELETE requests to retrieve, update, or delete a specific task within a project.
 
-```python
-# api/settings.py
-WSGI_APPLICATION = 'api.wsgi.app'
-```
+### Soft Delete
 
-There is a single view which renders the current time in `example/views.py`:
+- `/api/projects/<project_id>/undelete/`: POST request to undelete a project.
+- `/api/projects/<project_id>/tasks/<task_id>/undelete/`: POST request to undelete a task within a project.
 
-```python
-# example/views.py
-from datetime import datetime
+## Setup
 
-from django.http import HttpResponse
+1. Clone the repository:
 
-
-def index(request):
-    now = datetime.now()
-    html = f'''
-    <html>
-        <body>
-            <h1>Hello from Vercel!</h1>
-            <p>The current time is { now }.</p>
-        </body>
-    </html>
-    '''
-    return HttpResponse(html)
-```
-
-This view is exposed a URL through `example/urls.py`:
-
-```python
-# example/urls.py
-from django.urls import path
-
-from example.views import index
-
-
-urlpatterns = [
-    path('', index),
-]
-```
-
-Finally, it's made accessible to the Django server inside `api/urls.py`:
-
-```python
-# api/urls.py
-from django.urls import path, include
-
-urlpatterns = [
-    ...
-    path('', include('example.urls')),
-]
-```
-
-This example uses the Web Server Gateway Interface (WSGI) with Django to enable handling requests on Vercel with Serverless Functions.
-
-## Running Locally
-
-```bash
-python manage.py runserver
-```
-
-Your Django application is now available at `http://localhost:8000`.
-
-## One-Click Deploy
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fpython%2Fdjango&demo-title=Django%20%2B%20Vercel&demo-description=Use%20Django%204%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.&demo-url=https%3A%2F%2Fdjango-template.vercel.app%2F&demo-image=https://assets.vercel.com/image/upload/v1669994241/random/django.png)
+   ```bash
+   git clone https://github.com/tabish-siraj/project-management-api.git
