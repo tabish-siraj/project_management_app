@@ -94,9 +94,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'defaultdb',
         'USER': 'avnadmin',
-        'PASSWORD': 'AVNS__nm4Sk49rYlXSFOtoYq',
-        'HOST': 'pg-1aa6c518-tabish1226-03a6.g.aivencloud.com',
+        'PASSWORD': 'AVNS_rkJDgTG38IlPvwIWmbo',
+        'HOST': 'pg-295ad53a-tabish1226-03a6.e.aivencloud.com',
         'PORT': '26512',
+        'OPTIONS': {
+            'sslmode': 'require',
+            'sslrootcert': os.path.join(BASE_DIR, 'ca.pem'),
+        }
     }
 }
 
