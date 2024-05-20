@@ -22,15 +22,15 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         return self.title
-    
+
 class ProjectMember(models.Model):
     ROLE_OPTIONS = (
         ('read', 'Read'),
         ('write', 'Read & Write'),
     )
 
-    project = models.ForeignKey(Project, related_name='members', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='project_members', on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, related_name='project_members', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='project_memberships', on_delete=models.CASCADE)
     role = models.CharField(max_length=5, choices=ROLE_OPTIONS)
 
     def __str__(self) -> str:
