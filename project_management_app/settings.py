@@ -144,3 +144,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # JWT settings
 
 JWT_EXPIRATION_DELTA = timedelta(days=30)  # Example: Expire tokens after 30 days
+APPEND_SLASH=True
