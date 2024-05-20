@@ -2,8 +2,8 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from my_projects.models import Task, Project
-from my_projects.serializers import TaskSerializer, ProjectSerializer, UserRegisterSerializer
+from my_projects.models import Task, Project, ProjectMember
+from my_projects.serializers import TaskSerializer, ProjectSerializer, UserRegisterSerializer, ProjectMemberSerializer
 from django.contrib.auth.models import User
 
 class UserRegisterViewSet(viewsets.ViewSet):
@@ -39,7 +39,23 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = self.get_object()
         if project.created_by != request.user:
             return Response({'error': 'You are not authorized to add members to this project'}, status=status.HTTP_403_FORBIDDEN)
-        project.members.add(request.data['members'])
+
+        username = request.data.get('user')
+        role = request.data.get('role')
+        if not username or not role:
+            return Response({'error': 'User ID and role are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            project_member = ProjectMember.objects.get(project=project, user=user)
+            project_member.role = role
+            project_member.save()
+        except ProjectMember.DoesNotExist:
+            project_member = ProjectMember.objects.create(project=project, user=user, role=role)
         project.save()
         return Response()
     
@@ -60,12 +76,12 @@ class TaskViewSet(viewsets.ModelViewSet):
         project_id = kwargs['project_id']
         try:
             project = Project.objects.get(id=project_id)
-            if project.members.filter(id=request.user.id).exists():
+            if project.members.filter(id=request.user.id, role='write').exists():
                 serializer = self.get_serializer(data=request.data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save(created_by=request.user, project=project)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response({'error': 'You are not a member of this project'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'You are not a member of this project or you do not have write access.'}, status=status.HTTP_403_FORBIDDEN)
         except Project.DoesNotExist:
             return Response({'error': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -76,7 +92,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         task_id = kwargs['pk']
         try:
             task = Task.objects.get(id=task_id, project_id=project_id)
-            if task.project.members.filter(id=request.user.id).exists():
+            if task.project.members.filter(id=request.user.id, role='write').exists():
                 serializer = self.get_serializer(task, data=request.data, partial=True)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
@@ -87,10 +103,18 @@ class TaskViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_destroy(self, instance):
-        instance.is_deleted = True
-        instance.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def perform_destroy(self, request, project_id, pk):
+        try:
+            task = Task.objects.get(id=pk, project_id=project_id)
+            if task.project.members.filter(id=request.user.id, role='write').exists():
+                task.is_deleted = True
+                task.save()
+                return Response({'message': 'Task deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'error': 'You are not a member of this project'}, status=status.HTTP_403_FORBIDDEN)
+        except Task.DoesNotExist:
+            return Response({'error': 'Task not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
 
 class UndeleteProjectViewSet(viewsets.ViewSet):
@@ -117,7 +141,8 @@ class UndeleteTaskViewSet(viewsets.ViewSet):
         try:
             project = Project.objects.get(id=project_id, is_deleted=False)
             if project:
-                task = Task.objects.get(id=task_id, project=project, is_deleted=True)
+                task = Task.objects.get(id=task_id, project=project, is_deleted=True, project__is_deleted=False\
+                    ,project__members__user=request.user, project__members__role='write')
                 if task:
                     task.is_deleted = False
                     task.save()

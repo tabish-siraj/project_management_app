@@ -5,12 +5,11 @@ class Project(models.Model):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField()
     created_by = models.ForeignKey(User, related_name='created_projects', on_delete=models.CASCADE)
-    members = models.ManyToManyField(User, related_name='projects')
+    members = models.ManyToManyField(User, through='ProjectMember')
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.name
-    
 
 class Task(models.Model):
     project = models.ForeignKey(Project, related_name='tasks', on_delete=models.CASCADE)
@@ -23,3 +22,16 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         return self.title
+    
+class ProjectMember(models.Model):
+    ROLE_OPTIONS = (
+        ('read', 'Read'),
+        ('write', 'Read & Write'),
+    )
+
+    project = models.ForeignKey(Project, related_name='members', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='project_members', on_delete=models.CASCADE)
+    role = models.CharField(max_length=5, choices=ROLE_OPTIONS)
+
+    def __str__(self) -> str:
+        return f'{self.user.username} - {self.project.name}'
